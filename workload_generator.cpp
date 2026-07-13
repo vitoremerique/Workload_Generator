@@ -36,6 +36,8 @@ int main(int argc, char* argv[]){
     int cpu_load = 0;
     int ram_percent = 0;
     int iops = 0;
+    bool cpu_provided = false;
+    bool ram_provided = false;
     bool iops_provided = false;
     int time = 60;
 
@@ -58,8 +60,8 @@ int option_index = 0;
 while((opt = getopt_long(argc, argv, "c:u:r:i:t:h", long_options, &option_index )) !=-1){
     switch(opt){
         case 'c': cores = stoi(optarg); break;
-        case 'u': cpu_load = stoi(optarg); break;
-        case 'r': ram_percent = stoi(optarg); break;
+        case 'u': cpu_load = stoi(optarg); cpu_provided = true; break;
+        case 'r': ram_percent = stoi(optarg); ram_provided = true; break;
         case 'i': iops = stoi(optarg); iops_provided = true; break;
         case 't': time = stoi(optarg); break;
         case 'h':
@@ -74,6 +76,64 @@ while((opt = getopt_long(argc, argv, "c:u:r:i:t:h", long_options, &option_index 
             return 0;
         }
     }
+
+
+        pid_t pid_cpu = -1;
+        if (cpu_provided) {
+        vector<string> args_cpu = {
+            "stress-ng",
+            "--cpu", to_string(cores),
+            "--cpu-method", "matrixprod",
+            "--cpu-load", to_string(cpu_load),
+            "--timeout", to_string(time) + "s"
+        };
+        pid_cpu = process_trigger(args_cpu);
+    }
+
+
+        pid_t pid_ram = -1;
+        if (ram_provided) {
+        vector<string> args_ram = {
+            "stress-ng",
+            "--vm", "1",
+            "--vm-bytes", to_string(ram_percent) + "%",
+            "--timeout", to_string(time) + "s"
+        };
+        pid_ram = process_trigger(args_ram);
+    }
+   
+    
+  
+
+        pid_t pid_fio = -1;
+        if (iops_provided) {
+                vector<string>args_fio ={
+                    "fio",
+                        "--name=teste_io",
+                        "--ioengine=libaio",
+                        "--rw=randwrite",
+                        "--bs=4k",
+                        "--size=1G",
+                        "--direct=1", // Ignora o cache de RAM do SO para forçar escrita real no disco
+                        "--rate_iops=" + to_string(iops),
+                        "--time_based",
+                        "--runtime=" + to_string(time)
+                };
+
+                pid_fio = process_trigger(args_fio);
+        }
+
+
+
+
+cout << "[Orquestrator Process Started]" << endl;
+int status_cpu, status_ram, status_fio;
+if (pid_cpu > 0) waitpid(pid_cpu, &status_cpu, 0);
+if (pid_ram > 0) waitpid(pid_ram, &status_ram, 0);
+if (pid_fio > 0) waitpid(pid_fio, &status_fio, 0);
+
+cout << "[Orquestrator] Experiment completed." << endl;
+
 
 
 
