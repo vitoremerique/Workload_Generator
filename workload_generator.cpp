@@ -1,5 +1,8 @@
 #include<iostream>
 #include<vector>
+#include<algorithm>
+#include<cctype>
+#include<stdexcept>
 #include<unistd.h>
 #include<sys/wait.h>
 #include<getopt.h>
@@ -29,12 +32,11 @@ pid_t process_trigger(vector<string>& args_str){
 };
 
 
-
 int main(int argc, char* argv[]){
     cout << "Synthetic Workload Configuration (CPU, RAM, and IOPS)" << endl;
     int cores  = 1;
     int cpu_load = 0;
-    int ram_percent = 0;
+    int ram_gigabytes = 0;
     int iops = 0;
     bool cpu_provided = false;
     bool ram_provided = false;
@@ -61,7 +63,7 @@ while((opt = getopt_long(argc, argv, "c:u:r:i:t:h", long_options, &option_index 
     switch(opt){
         case 'c': cores = stoi(optarg); break;
         case 'u': cpu_load = stoi(optarg); cpu_provided = true; break;
-        case 'r': ram_percent = stoi(optarg); ram_provided = true; break;
+        case 'r': ram_gigabytes = stoi(optarg); ram_provided = true; break;
         case 'i': iops = stoi(optarg); iops_provided = true; break;
         case 't': time = stoi(optarg); break;
         case 'h':
@@ -69,7 +71,7 @@ while((opt = getopt_long(argc, argv, "c:u:r:i:t:h", long_options, &option_index 
                     << "Options:" << endl
                     << "  -c, --cores <number>      Number of CPU cores to use (default: 1)" << endl
                     << "  -u, --cpu <percentage>    CPU load percentage (default: 0)" << endl
-                    << "  -r, --ram <percentage>    RAM usage percentage (default: 0)" << endl
+                    << "  -r, --ram <gigabytes>    RAM usage in gigabytes (example: 2 for 2G, default: 0)" << endl
                     << "  -i, --iops <number>       IOPS (default: 0)" << endl
                     << "  -t, --time <seconds>      Duration of the workload in seconds (default: 60)" << endl
                     << "  -h, --help                Show this help message" << endl;
@@ -85,6 +87,7 @@ while((opt = getopt_long(argc, argv, "c:u:r:i:t:h", long_options, &option_index 
             "--cpu", to_string(cores),
             "--cpu-method", "matrixprod",
             "--cpu-load", to_string(cpu_load),
+            "--cpu-load-slice", "10",
             "--timeout", to_string(time) + "s"
         };
         pid_cpu = process_trigger(args_cpu);
@@ -96,7 +99,8 @@ while((opt = getopt_long(argc, argv, "c:u:r:i:t:h", long_options, &option_index 
         vector<string> args_ram = {
             "stress-ng",
             "--vm", "1",
-            "--vm-bytes", to_string(ram_percent) + "%",
+            "--vm-bytes", to_string(ram_gigabytes) + "G",
+            "--vm-keep",
             "--timeout", to_string(time) + "s"
         };
         pid_ram = process_trigger(args_ram);
@@ -112,8 +116,8 @@ while((opt = getopt_long(argc, argv, "c:u:r:i:t:h", long_options, &option_index 
                         "--name=teste_io",
                         "--ioengine=libaio",
                         "--rw=randwrite",
-                        "--bs=4k",
-                        "--size=1G",
+                        "--bs=4K", //Tamanho do Bloco 
+                        "--size=4G",
                         "--direct=1", // Ignora o cache de RAM do SO para forçar escrita real no disco
                         "--rate_iops=" + to_string(iops),
                         "--time_based",
