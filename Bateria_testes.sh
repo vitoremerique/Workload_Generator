@@ -59,7 +59,7 @@ for i in $(seq 1 $TOTAL_RUNS); do
     echo "# ------------------------------------------------" >> "$CSV_FILE"
 
     # 2. Dispara o gerador passando o tempo diretamente como argumento
-    (exec -a "$PROCESS_NAME" ./workload_generator --cores 2 --cpu 50 --ram 3 "$DURATION_FLAG" "$RUN_DURATION") &
+    (exec -a "$PROCESS_NAME" ./workload_generator --cores 2 --cpu 50 --ram 3 --iops 100 "$DURATION_FLAG" "$RUN_DURATION") &
     GEN_PID=$!
 
   # 3. Dispara a monitoração global (estável, sem travar o kernel e com CSV perfeito)
