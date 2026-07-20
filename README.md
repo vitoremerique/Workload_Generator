@@ -9,6 +9,28 @@ Este projeto gera cargas sintéticas de CPU, RAM e IOPS para testes de desempenh
 - [Bateria_testes.sh](Bateria_testes.sh): executa uma bateria de testes e gera saída de monitoramento.
 - [Monitor_Processo.sh](Monitor_Processo.sh): monitora o processo específico do workload generator e grava um CSV.
 
+### Exemplos de uso dos arquivos
+
+#### Executar o orquestrador de workload
+```bash
+./workload_generator --cores 2 --cpu 50 --ram 3 --iops 100 --time 30
+```
+
+#### Instalar dependências e `gpu-burn`
+```bash
+./install_dependencies.sh
+```
+
+#### Rodar a bateria de testes completa
+```bash
+./Bateria_testes.sh
+```
+
+#### Monitorar um processo específico e gravar CSV
+```bash
+./Monitor_Processo.sh
+```
+
 ## 2. Dependências necessárias
 
 Antes de executar, certifique-se de que os seguintes componentes estejam instalados:
@@ -17,6 +39,7 @@ Antes de executar, certifique-se de que os seguintes componentes estejam instala
 - `make`
 - `stress-ng`
 - `fio`
+- `gpu-burn` (para testes GPU, instalado opcionalmente pelo script)
 - `pcp` (para o script de bateria)
 
 Você pode tentar instalar tudo com:
@@ -50,6 +73,7 @@ Se a compilação for bem-sucedida, será criado o executável `./workload_gener
 - `-r, --ram <gigabytes>`: quantidade de RAM a alocar/emular.
 - `-i, --iops <numero>`: taxa de IOPS para a carga de disco.
 - `-w, --readwrite <percentual>`: percentual de operações de leitura (o restante será escrita).
+- `-g, --gpu <percentual>`: percentual de GPU a usar no teste `gpu-burn`.
 - `-t, --time <segundos>`: duração da execução.
 - `-h, --help`: mostra a ajuda.
 
@@ -78,10 +102,19 @@ Se a compilação for bem-sucedida, será criado o executável `./workload_gener
 ```bash
 ./workload_generator --cores 2 --cpu 50 --ram 3 --iops 10000 --readwrite 60 --time 30
 ```
-
 Nesse exemplo:
 - `--iops 10000` define a taxa de IOPS.
 - `--readwrite 60` define que 60% das operações serão de leitura e 40% serão de escrita.
+
+#### GPU com gpu-burn
+
+```bash
+./workload_generator --gpu 50 --time 60
+```
+
+Neste exemplo, o `gpu-burn` tentará usar 50% da GPU disponível por 60 segundos.
+
+
 
 ## 5. Executar a bateria de testes
 
@@ -136,15 +169,17 @@ metricas_out/process_monitor/
 - Para testar disco, use `--iops` e ajuste `--readwrite` conforme a proporção desejada.
 - Para experimentos mais longos, aumente `--time`.
 - Para aumentar o nível de carga, aumente `--cpu`, `--ram` e `--iops` gradualmente.
+- Para testar gpu, aumente `--gpu` em porcentagem para recurso disponível.
 
 ## 9. Exemplo completo
 
 ```bash
-./workload_generator --cores 4 --cpu 80 --ram 4 --iops 5000 --readwrite 70 --time 60
+./workload_generator --cores 4 --cpu 80 --ram 4 --iops 5000 --readwrite 70 --gpu 50 --time 60
 ```
 
 Este comando gera:
 - CPU intensa em 4 núcleos;
 - uso de RAM de 4 GB;
 - IOPS de 5000 com 70% de leitura e 30% de escrita;
+- uso de 50% do recurso de GPU;
 - duração de 60 segundos.
