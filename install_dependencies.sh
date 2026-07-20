@@ -134,6 +134,47 @@ compile_workload() {
 }
 
 
+# Função para instalar gpu-burn (opcional)
+install_gpu_burn() {
+    echo ""
+    echo "================================================================="
+    echo " Instalando gpu-burn (se necessário)"
+    echo "================================================================="
+
+    if command -v gpu-burn &> /dev/null; then
+        echo "✓ gpu-burn já instalado: $(gpu-burn --version 2>/dev/null || echo '(sem versão)')"
+        return 0
+    fi
+
+    echo "→ Tentando instalar dependências para compilar gpu-burn..."
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update
+        sudo apt-get install -y git build-essential || true
+        sudo apt-get install -y nvidia-cuda-toolkit || true
+    elif command -v dnf &> /dev/null; then
+        sudo dnf install -y git make gcc-c++ || true
+        sudo dnf install -y cuda-toolkit || true
+    elif command -v yum &> /dev/null; then
+        sudo yum install -y git make gcc-c++ || true
+        sudo yum install -y cuda || true
+    fi
+
+    TMPDIR="/tmp/gpu-burn-$$"
+    rm -rf "$TMPDIR"
+    git clone https://github.com/wilicc/gpu-burn.git "$TMPDIR" || { echo "✗ Falha ao clonar gpu-burn"; return 1; }
+    (cd "$TMPDIR" && make) || { echo "✗ Falha ao compilar gpu-burn"; return 1; }
+
+    if [ -f "$TMPDIR/gpu_burn" ]; then
+        sudo cp "$TMPDIR/gpu_burn" /usr/local/bin/gpu-burn || sudo mv "$TMPDIR/gpu_burn" /usr/local/bin/gpu-burn
+        echo "✓ gpu-burn instalado em /usr/local/bin/gpu-burn"
+        return 0
+    else
+        echo "✗ Arquivo binário gpu_burn não encontrado após compilação"
+        return 1
+    fi
+}
+
+
 
 # ============================================================================
 # EXECUÇÃO PRINCIPAL
@@ -142,6 +183,11 @@ compile_workload() {
 
 # Instalar dependências
 install_dependencies
+
+# Instalar gpu-burn (opcional)
+if ! install_gpu_burn; then
+    echo "Aviso: não foi possível instalar gpu-burn automaticamente. Você pode instalar manualmente se precisar de testes GPU."
+fi
 
 # Verificar instalação
 if ! verify_installation; then
