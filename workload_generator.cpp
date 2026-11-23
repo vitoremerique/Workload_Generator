@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
                      << "  -u, --cpu <percentage>    CPU load percentage (default: 0)" << endl
                      << "  -r, --ram <gigabytes>    RAM usage in gigabytes (example: 2 for 2G, default: 0)" << endl
                      << "  -i, --iops <number>       IOPS (default: 0)" << endl
-                     << "  -w, --readwrite <percentage>  Percentage of read operations (default: 0)" << endl
+                     << "  -w, --readwrite <percentage>  Percentage of read operations (default: 50)" << endl
                      << "  -t, --time <seconds>      Duration of the workload in seconds (default: 60)" << endl
                      << "  -g, --gpu <percentage>    GPU load percentage (default: 0)" << endl
                      << "  -h, --help                Show this help message" << endl;
