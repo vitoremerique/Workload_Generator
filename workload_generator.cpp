@@ -92,9 +92,14 @@ int main(int argc, char* argv[]) {
     }
 
     if (iops_provided) {
+        // Com um único valor, o fio aplica --rate_iops separadamente a leitura
+        // e a escrita (dobrando o total e anulando o --rwmixread). Por isso a
+        // taxa é dividida: --rate_iops=<leitura>,<escrita>.
+        int read_iops = iops * readwrite / 100;
+        int write_iops = iops - read_iops;
         string cmd_fio = "fio --name=teste_io --ioengine=libaio --rw=randrw" +
                          string(" --bs=4K --size=4G --direct=1") +
-                         " --rate_iops=" + to_string(iops) + 
+                         " --rate_iops=" + to_string(read_iops) + "," + to_string(write_iops) +
                          " --time_based --runtime=" + to_string(time) + 
                          " --rwmixread=" + to_string(readwrite);
         active_threads.push_back(thread(run_tool_in_thread, "IOPS", cmd_fio));
